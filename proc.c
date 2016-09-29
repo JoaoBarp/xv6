@@ -138,7 +138,7 @@ growproc(int n)
 // Sets up stack to return as if from system call.
 // Caller must set state of returned proc to RUNNABLE.
 int
-fork(void)
+fork(int tick)
 {
   int i, pid;
   struct proc *np;
@@ -168,6 +168,7 @@ fork(void)
   np->cwd = idup(proc->cwd);
 
   safestrcpy(np->name, proc->name, sizeof(proc->name));
+  np->Ptickets=tick;
 
   pid = np->pid;
 

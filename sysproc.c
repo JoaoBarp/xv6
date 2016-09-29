@@ -10,7 +10,9 @@
 int
 sys_fork(void)
 {
-  return fork();
+int Tic;
+argint(0, &Tic); 
+  return fork(Tic);
 }
 
 int
