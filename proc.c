@@ -276,14 +276,26 @@ wait(void)
 }
 
 
+
+//conta o numero total de ticktes para usar na função de numeros aleatorios.
+int total_ticktes(){
+int contador=0;
+struct proc *processo;
+for(processo = ptable.proc; processo < &ptable.proc[NPROC]; processo++){
+    if(processo->state == RUNNABLE){                                 
+         contador=contador+processo->Ptickets;
+        }
+    }
+cprintf("eu-%d-",contador);
+    return contador;
+}
+
+
 int Num_aleatorio=1; //numero aleatorio para o escalonador
-int constante_n=39373; //L'Ecuyer 
-int mod=10;
-//Multiply With Carry para geração de numero aleatorio
-int Numero aleatorio(){
-	Num_aleatorio=(164*x + constante_n )% mod;
-	constante_n=(164*x + constante_n )/mod
-	return Num_aleatorio
+//geração de numero aleatorio
+int Numero_aleatorio(){
+	Num_aleatorio=(Num_aleatorio * 1664525 + 1013904223 )% total_ticktes();
+return Num_aleatorio;
 }
 
 
@@ -300,38 +312,42 @@ int Numero aleatorio(){
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
 void
-scheduler(void)
-{
+scheduler(void){
   struct proc *p;
-
+  int numero;
+  int count=0;
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
-
+    numero=Numero_aleatorio();
+	if(total_ticktes() > 0){
+    	for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+     		 if(p->state == RUNNABLE){
+				count=count+p->Ptickets;
+				if(numero >= count){break;}
+			 }
+       	}		 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
+	  if(p->state == RUNNABLE){
       proc = p;
       switchuvm(p);
       p->state = RUNNING;
-      swtch(&cpu->scheduler, p->context);
+      swtch(&cpu->scheduler, proc->context);
       switchkvm();
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       proc = 0;
     }
+   }
     release(&ptable.lock);
-
   }
 }
-
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
 // intena because intena is a property of this

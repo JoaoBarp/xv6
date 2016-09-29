@@ -12,7 +12,7 @@ int j;
 for(j=0;j<1;j++){
 	 if(fork(10)==0){
 	      f1();
-              printf(1,"teste\n");
+             // printf(1,"teste\n");
 	      exit(); 
      }
 }
