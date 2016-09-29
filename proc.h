@@ -1,3 +1,7 @@
+ //definição do numero maximo e minimo de tickets de um processo
+#define MAXTICK       100
+#define MINTICK         1
+
 // Per-CPU state
 struct cpu {
   uchar apicid;                // Local APIC ID

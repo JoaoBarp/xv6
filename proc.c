@@ -168,8 +168,14 @@ fork(int tick)
   np->cwd = idup(proc->cwd);
 
   safestrcpy(np->name, proc->name, sizeof(proc->name));
+  if(tick < MINTICK){
+	np->Ptickets=MINTICK;
+  }else if(tick > MAXTICK){
+	np->Ptickets=MAXTICK;
+  }else{
   np->Ptickets=tick;
-
+  }
+  //cprintf("\nEstou no fork: %d",np->Ptickets);
   pid = np->pid;
 
   acquire(&ptable.lock);
@@ -268,6 +274,22 @@ wait(void)
     sleep(proc, &ptable.lock);  //DOC: wait-sleep
   }
 }
+
+
+int Num_aleatorio=1; //numero aleatorio para o escalonador
+int constante_n=39373; //L'Ecuyer 
+int mod=10;
+//Multiply With Carry para geração de numero aleatorio
+int Numero aleatorio(){
+	Num_aleatorio=(164*x + constante_n )% mod;
+	constante_n=(164*x + constante_n )/mod
+	return Num_aleatorio
+}
+
+
+
+
+
 
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
