@@ -26,14 +26,39 @@ pinit(void)
   initlock(&ptable.lock, "ptable");
 }
 
+//conta o numero total de ticktes para usar na função de numeros aleatorios.
+int total_ticktes(){
+	int contador=0;
+	struct proc *processo;
+	for(processo = ptable.proc; processo < &ptable.proc[NPROC]; processo++){
+   		 if(processo->state == RUNNABLE){                                 
+       		  contador=contador+processo->Ptickets;
+         }
+    }
+    return contador;
+}
+
+
+int Num_aleatorio=1; //numero aleatorio para o escalonador
+int Numero_aleatorio(){   //geração de numero aleatorio
+	Num_aleatorio=(Num_aleatorio * 1664525 + 1013904223 );
+	if(Num_aleatorio<0){return -1*Num_aleatorio;}
+	return Num_aleatorio;
+}
+
+
+
+
+
+
+
+
 //PAGEBREAK: 32
 // Look in the process table for an UNUSED proc.
 // If found, change state to EMBRYO and initialize
 // state required to run in the kernel.
 // Otherwise return 0.
-static struct proc*
-allocproc(void)
-{
+static struct proc* allocproc(void){
   struct proc *p;
   char *sp;
 
@@ -78,9 +103,7 @@ found:
 
 //PAGEBREAK: 32
 // Set up first user process.
-void
-userinit(void)
-{
+void userinit(void){
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
@@ -99,7 +122,7 @@ userinit(void)
   p->tf->eflags = FL_IF;
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
-
+    p->Ptickets= 10;
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
@@ -116,9 +139,7 @@ userinit(void)
 
 // Grow current process's memory by n bytes.
 // Return 0 on success, -1 on failure.
-int
-growproc(int n)
-{
+int growproc(int n) {
   uint sz;
 
   sz = proc->sz;
@@ -137,9 +158,7 @@ growproc(int n)
 // Create a new process copying p as the parent.
 // Sets up stack to return as if from system call.
 // Caller must set state of returned proc to RUNNABLE.
-int
-fork(int tick)
-{
+int fork(int tick) {
   int i, pid;
   struct proc *np;
 
@@ -168,12 +187,13 @@ fork(int tick)
   np->cwd = idup(proc->cwd);
 
   safestrcpy(np->name, proc->name, sizeof(proc->name));
+
   if(tick < MINTICK){
 	np->Ptickets=MINTICK;
   }else if(tick > MAXTICK){
 	np->Ptickets=MAXTICK;
   }else{
-  np->Ptickets=tick;
+    np->Ptickets=tick;
   }
   //cprintf("\nEstou no fork: %d",np->Ptickets);
   pid = np->pid;
@@ -276,33 +296,6 @@ wait(void)
 }
 
 
-
-//conta o numero total de ticktes para usar na função de numeros aleatorios.
-int total_ticktes(){
-int contador=0;
-struct proc *processo;
-for(processo = ptable.proc; processo < &ptable.proc[NPROC]; processo++){
-    if(processo->state == RUNNABLE){                                 
-         contador=contador+processo->Ptickets;
-        }
-    }
-cprintf("eu-%d-",contador);
-    return contador;
-}
-
-
-int Num_aleatorio=1; //numero aleatorio para o escalonador
-//geração de numero aleatorio
-int Numero_aleatorio(){
-	Num_aleatorio=(Num_aleatorio * 1664525 + 1013904223 )% total_ticktes();
-return Num_aleatorio;
-}
-
-
-
-
-
-
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
@@ -311,23 +304,23 @@ return Num_aleatorio;
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
-void
-scheduler(void){
+void scheduler(void){
   struct proc *p;
   int numero;
-  int count=0;
   for(;;){
+	 int count=0;
     // Enable interrupts on this processor.
     sti();
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    numero=Numero_aleatorio();
 	if(total_ticktes() > 0){
+	numero=Numero_aleatorio();
+	numero=numero % total_ticktes();
     	for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
      		 if(p->state == RUNNABLE){
 				count=count+p->Ptickets;
-				if(numero >= count){break;}
+				if(numero <= count){break;}
 			 }
        	}		 
       // Switch to chosen process.  It is the process's job
