@@ -319,7 +319,7 @@ void scheduler(void){
     	for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
      		 if(p->state == RUNNABLE){
 				count=count+p->Ptickets;
-				if(numero <= count){break;}
+				if(numero-1 <= count){break;}
 			 }
        	}		 
       // Switch to chosen process.  It is the process's job
