@@ -7,6 +7,11 @@
 #include "proc.h"
 #include "spinlock.h"
 
+//definição do numero maximo e minimo de tickets de um processo
+#define MAXTICK       100
+#define MINTICK         1
+
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -40,17 +45,12 @@ int total_ticktes(){
 
 
 int Num_aleatorio=1; //numero aleatorio para o escalonador
-int Numero_aleatorio(){   //geração de numero aleatorio
+//gerador congruente linear, geração de numero aleatorio
+int Numero_aleatorio(){   
 	Num_aleatorio=(Num_aleatorio * 1664525 + 1013904223 );
 	if(Num_aleatorio<0){return -1*Num_aleatorio;}
 	return Num_aleatorio;
 }
-
-
-
-
-
-
 
 
 //PAGEBREAK: 32
@@ -311,7 +311,6 @@ void scheduler(void){
 	 int count=0;
     // Enable interrupts on this processor.
     sti();
-
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
 	if(total_ticktes() > 0){
@@ -332,7 +331,6 @@ void scheduler(void){
       p->state = RUNNING;
       swtch(&cpu->scheduler, proc->context);
       switchkvm();
-
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       proc = 0;
